@@ -17,6 +17,18 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
+# edit data for a user
+@app.put("/users/{user_id}", response_model=schemas.UserResponse)
+def update_user(user_id: int, new_user_data: schemas.UserUpdate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User Not Found")
+    db_user.name = new_user_data.name
+    db_user.email = new_user_data.email
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 # get all users
 @app.get("/users/", response_model=list[schemas.UserResponse])
 def get_users(db: Session = Depends(get_db)):
@@ -25,21 +37,20 @@ def get_users(db: Session = Depends(get_db)):
 # get a user by ID
 @app.get("/users/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
-    return user
+    return db_user
 
 # delete a user
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
         raise HTTPException(status_code=404, detail="User Not Found")
-    db.delete(user)
+    db.delete(db_user)
     db.commit()
     return {"message" : f"User {user_id} deleted successfully"}
-
 
 
 
